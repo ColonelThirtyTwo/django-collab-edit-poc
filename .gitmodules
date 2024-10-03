@@ -1,0 +1,4 @@
+[submodule "pycrdt"]
+	path = pycrdt
+	url = https://github.com/ColonelThirtyTwo/pycrdt.git
+	branch = xml

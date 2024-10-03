@@ -1,0 +1,30 @@
+
+services:
+  django-server:
+    build:
+      dockerfile: ./Python.dockerfile
+      context: .
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    ports:
+      - 8001:8001
+    command: runserver 0.0.0.0:8001
+  django-workers:
+    build:
+      dockerfile: ./Python.dockerfile
+      context: .
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    command: runworker poc-yjs-save
+  redis:
+    image: redis:6-alpine
+  build-frontend:
+    profiles: ["build"]
+    image: node:21-alpine
+    volumes:
+      - .:/app
+    command: sh -c 'cd /app/frontend && npm install && npm run build'

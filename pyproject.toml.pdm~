@@ -1,0 +1,21 @@
+[project]
+name = "django-collab-edit-poc"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Alexander Parrill", email = "aparrill@specterops.io"},
+]
+dependencies = [
+    "django>=5.1.1",
+    "django-q2>=1.7.2",
+    "channels[daphne]>=4.1.0",
+    "pycrdt-websocket>=0.14.2",
+    "pycrdt @ file:///${PROJECT_ROOT}/pycrdt-0.9.11-cp311-none-win_amd64.whl",
+]
+requires-python = "==3.11.*"
+readme = "README.md"
+license = {text = "Private"}
+
+
+[tool.pdm]
+distribution = false
