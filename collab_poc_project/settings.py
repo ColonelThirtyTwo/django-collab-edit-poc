@@ -153,17 +153,8 @@ LOGGING = {
         "level": "WARNING",
     },
     "loggers": {
-        "ypy_websocket": {
+        "collab_poc_app": {
             "level": "DEBUG",
         },
     },
-}
-
-Q_CLUSTER = {
-    'workers': 4,
-    'timeout': 90,
-    'retry': 120,
-    'queue_limit': 50,
-    'bulk': 10,
-    'orm': 'default'
 }

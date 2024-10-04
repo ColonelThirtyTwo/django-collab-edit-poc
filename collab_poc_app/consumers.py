@@ -17,7 +17,6 @@ from collab_poc_app.models import TestDoc
 logger = logging.getLogger(__name__)
 
 class PocYjsConsumer(YjsConsumer):
-
     connection_id: str
     updates_to_send: list[Any]
 
@@ -153,11 +152,7 @@ class SaveState:
 
         # DEBUG
         user = User.objects.get(pk=self.user_pk)
-        description = model_doc.get("description", type=pycrdt.Text)
-        text = f"UPDATE {user}:\n"
-        for item, attrs in description.diff():
-            text += f"\t{item!s} ({attrs!r})\n"
-        print(text, end="", flush=True)
+        logger.warning("DEBUG: Update from %s:\n%s", user, model.ydoc_repr())
         # ENDDEBUG
 
 
@@ -170,7 +165,7 @@ class PocSaverConsumer(AsyncConsumer):
 
     async def doc_updated(self, message: dict) -> None:
         connection_id: str = message["connection_id"]
-        logger.warning("DEBUG: doc_updated from %s / %s", connection_id, message["user_pk"])
+        logger.debug("doc_updated from %s user %s", connection_id, message["user_pk"])
         if connection_id not in self.pending:
             self.pending[connection_id] = SaveState(
                 connection_id,
@@ -182,7 +177,7 @@ class PocSaverConsumer(AsyncConsumer):
 
     async def doc_flush(self, message: dict) -> None:
         connection_id: str = message["connection_id"]
-        logger.warning("DEBUG: doc_flush from %s", connection_id)
+        logger.debug("doc_flush from %s", connection_id)
         if connection_id not in self.pending:
             return
         await self.pending[connection_id].flush()

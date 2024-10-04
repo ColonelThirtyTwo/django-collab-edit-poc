@@ -1,3 +1,5 @@
+// TODO: fix this
+
 import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createEditor, Editor, Transforms } from 'slate';
@@ -5,7 +7,7 @@ import { Slate, withReact, Editable } from 'slate-react';
 import { YjsEditor } from '@slate-yjs/core'
 import { YjsPlugin } from '@udecode/plate-yjs/react';
 import * as Y from 'yjs';
-import Connection from "./connection.ts";
+import Connection from "../connection.ts";
 import { usePlateEditor, Plate, PlateContent, createPlateEditor, useEditorPlugin, toPlatePlugin } from '@udecode/plate-common/react';
 import { withTYjs } from "@udecode/plate-yjs";
 import { WebsocketProvider } from "y-websocket";

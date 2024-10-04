@@ -4,7 +4,7 @@ import { createEditor, Editor, Transforms } from 'slate';
 import { Slate, withReact, Editable } from 'slate-react';
 import { withYjs, YjsEditor } from '@slate-yjs/core'
 import * as Y from 'yjs';
-import Connection from "./connection.ts";
+import Connection from "../connection.ts";
 
 const initial = [{ type: 'paragraph', children: [{ text: '' }]}];
 

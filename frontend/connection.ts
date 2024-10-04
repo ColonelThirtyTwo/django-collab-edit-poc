@@ -6,11 +6,11 @@ export default class Connection {
     public doc: Y.Doc;
     public provider: WebsocketProvider;
 
-    constructor(wspath: string, room: string) {
+    constructor(wspath: string, room: string, username: string) {
         this.doc = new Y.Doc();
         this.provider = new WebsocketProvider(wspath, room, this.doc);
         this.provider.awareness.setLocalStateField("user", {
-            name: "testuer",
+            name: username,
             color: "blue",
         });
     }

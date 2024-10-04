@@ -11,27 +11,28 @@
 </head>
 <body>
     <h2>Name</h2>
-    <div id="editor-name">Loading...</div>
+    <input type="text" id="editor-name" disabled />
 
     <h2>Description</h2>
-    <div id="editor-description">Loading...</div>
+    <div class="editor editor-area" id="editor-description">Loading...</div>
 
     <h2>Contents</h2>
-    <div id="editor-content">Loading...</div>
+    <div class="editor editor-area" id="editor-content">Loading...</div>
 
     <script>
         (function() {
             const conn = new pocConnection(
                 "ws://" + window.location.host + "{{ wspath|escapejs }}",
                 ({{doc.pk}}).toString(),
+                "{{ user.get_username|escapejs }}"
             );
             let activated = false;
             conn.provider.on("sync", function(isSynced) {
                 if(isSynced && !activated) {
                     activated = true;
-                    quillSingleLineEditor(document.getElementById("editor-name"), conn, "name");
-                    quillAreaEditor(document.getElementById("editor-description"), conn, "description");
-                    quillAreaEditor(document.getElementById("editor-content"), conn, "key");
+                    pocNonCollabText(document.getElementById("editor-name"), conn, "name");
+                    pocEditor(document.getElementById("editor-description"), conn, "description");
+                    pocEditor(document.getElementById("editor-content"), conn, "key");
                 }
             });
         })();

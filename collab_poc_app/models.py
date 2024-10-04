@@ -39,9 +39,24 @@ class TestDoc(models.Model):
     contents = models.TextField()
 
     def set_fields_from_doc(self):
-        self.name = str(self.yjs.get("name", type=pycrdt.XmlFragment))
+        self.name = str(self.yjs.get("non_collab_fields", type=pycrdt.Map).get("name", ""))
         self.description = str(self.yjs.get("description", type=pycrdt.XmlFragment))
         self.contents = str(self.yjs.get("contents", type=pycrdt.XmlFragment))
+
+    def ydoc_repr(self):
+        text = ""
+        for field in ["name"]:
+            val = self.yjs.get("non_collab_fields",type=pycrdt.Map).get(field, None)
+            text += f"{field}: {val!r}\n"
+        for field in ["description", "contents"]:
+            text += f"{field}:\n\tText:\n"
+            text += "".join(
+                f"\t\t{content} ({attrs!r})\n"
+                for (content, attrs) in self.yjs.get(field, type=pycrdt.Text).diff()
+            )
+            text += "\tXML: {}\n".format(self.yjs.get(field, type=pycrdt.XmlFragment))
+        return text
+
 
     def get_absolute_url(self):
         return reverse("detail", kwargs={"pk": self.pk})
