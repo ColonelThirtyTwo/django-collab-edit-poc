@@ -1,4 +1,4 @@
-import { ySyncPlugin, yUndoPlugin, undo, redo, initProseMirrorDoc } from 'y-prosemirror'
+import { ySyncPlugin, yUndoPlugin, yCursorPlugin, undo, redo, initProseMirrorDoc } from 'y-prosemirror'
 import {schema} from "prosemirror-schema-basic";
 import {EditorState} from "prosemirror-state";
 import {EditorView} from "prosemirror-view";
@@ -21,6 +21,7 @@ export function editor(el: HTMLElement, conn: Connection, key: string) {
     const { doc, mapping } = initProseMirrorDoc(item, schema);
     const plugins = [
         ySyncPlugin(item, { mapping }),
+        yCursorPlugin(conn.provider.awareness),
         yUndoPlugin(),
         keymap({
             "Mod-z": undo,
