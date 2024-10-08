@@ -11,7 +11,7 @@ export default class Connection {
         this.provider = new WebsocketProvider(wspath, room, this.doc);
         this.provider.awareness.setLocalStateField("user", {
             name: username,
-            color: "blue",
+            color: "#ccccff",
         });
     }
 

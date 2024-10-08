@@ -1,6 +1,6 @@
 
 import Connection from "./connection.ts";
-import { editor } from "./editors/prosemirror.ts";
+import { editor } from "./editors/tiptap.tsx";
 import { nonCollabText } from "./non_collab_fields.ts";
 
 type EditorFunc = (el: HTMLElement, conn: Connection, key: string) => void;
