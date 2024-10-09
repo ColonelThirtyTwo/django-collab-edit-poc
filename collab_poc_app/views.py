@@ -10,7 +10,7 @@ def index(request: HttpRequest):
         obj = TestDoc.objects.create()
         obj.save()
         return redirect("detail", pk=obj.pk)
-    return render(request, "poc/index.html", {"docs": TestDoc.objects.order_by("id")})
+    return render(request, "poc/index.html", {"docs": TestDoc.objects.order_by("id").defer("yjs_doc")})
 
 @login_required
 def doc(request: HttpRequest, pk: int):

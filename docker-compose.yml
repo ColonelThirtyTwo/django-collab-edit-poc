@@ -19,7 +19,7 @@ services:
       - .:/app
     depends_on:
       - redis
-    command: runworker poc-yjs-save
+    command: runworker yjs-save
   redis:
     image: redis:6-alpine
   build-frontend:

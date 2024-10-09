@@ -10,11 +10,13 @@ RUN cd /pycrdt/ && maturin build --release --out dist && ls -alh dist
 
 FROM python:3.12-alpine3.20
 
-RUN pip install pdm
+ENV PIP_ROOT_USER_ACTION=ignore
 RUN mkdir /app /install
 COPY requirements.txt /install/
 COPY --from=pycrdtbuild /pycrdt/dist/pycrdt-0.9.11-cp312-cp312-musllinux_1_2_x86_64.whl /install/pycrdt/dist/
-RUN cd /install/ && pip install /install/pycrdt/dist/pycrdt-0.9.11-cp312-cp312-musllinux_1_2_x86_64.whl && pip install --requirement requirements.txt
+RUN cd /install/ && \
+    pip install /install/pycrdt/dist/pycrdt-0.9.11-cp312-cp312-musllinux_1_2_x86_64.whl && \
+    pip install --requirement requirements.txt
 
 VOLUME ["/app"]
 WORKDIR /app

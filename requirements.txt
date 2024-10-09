@@ -2,7 +2,8 @@ django ~= 5.1.1
 django-q2 ~= 1.7.2
 channels[daphne] ~= 4.1.0
 channels-redis ~= 4.1.0
-pycrdt-websocket ~= 0.14.2
+pycrdt-websocket == 0.14.2
+django-computedfields ~= 0.2.6
 # TODO: this still complains about missing files even if the platform doesn't match. So we install it manually in the container setup
 #pycrdt @ ./pycrdt/dist/pycrdt-0.9.11-cp311-none-win_amd64.whl ; sys_platform == 'win32'
 #pycrdt @ ./pycrdt/dist/pycrdt-0.9.11-cp312-cp312-musllinux_1_2_x86_64.whl ; sys_platform == 'linux'

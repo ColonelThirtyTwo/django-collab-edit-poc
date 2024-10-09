@@ -33,12 +33,14 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'daphne',
     'channels',
+    'computedfields',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'pycrdt_model.apps.PycrdtModelApp',
     'collab_poc_app.apps.CollabPocApp',
 ]
 
@@ -154,6 +156,9 @@ LOGGING = {
     },
     "loggers": {
         "collab_poc_app": {
+            "level": "DEBUG",
+        },
+        "pycrdt_model": {
             "level": "DEBUG",
         },
     },
