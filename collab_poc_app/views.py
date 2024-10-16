@@ -66,7 +66,7 @@ def history_list(request: HttpRequest, pk: int) -> HttpResponse:
                     html.apply_element_event(path, delta, keys)
             events.clear()
         html_diffs_per_instance.append([str(html) for html in delta_render])
-    
+
     entries = (
         (instance, (
             (name, pretty_name, diff)
@@ -109,6 +109,8 @@ def history_view(request: HttpRequest, doc_pk: int, history_pk: int) -> HttpResp
                 html.apply_text_event(path, delta)
             else:
                 html.apply_element_event(path, delta, keys)
+
+    print("DEBUG:", str(frags[1]), flush=True)
 
     return render(request, "poc/doc_history_view.html", {
         "doc": doc_model,

@@ -1,21 +1,53 @@
 
 .rendered-rich-text {
+    .unrecognized-tag, .unrecognized-mark {
+        background-color: rgba(255,255,100,0.4);
+    }
 
     // Block attributes
     .text-align-right {
         text-align: right;
     }
 
-    .unrecognized-tag {
-        background-color: rgba(255,255,100,0.4);
+    .code-block {
+        display: block;
+        font-family: monospace;
+        white-space: pre;
+        word-break: keep-all;
+    }
+
+    div.page-break {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: center;
+
+        margin: 1rem 0;
+
+        .page-break-text {
+            color: #aaa;
+        }
+        .page-break-line {
+            border-top: 1px solid #aaa;
+            flex-grow: 1;
+        }
     }
 
     // Marks
     .bold {
         font-weight: bold;
     }
+    .code {
+        font-family: monospace;
+    }
     .italic {
         font-style: italic;
+    }
+    .strike {
+        text-decoration: line-through;
+    }
+    .underline {
+        text-decoration: underline;
     }
 
     // Changes

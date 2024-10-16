@@ -72,11 +72,13 @@ class TiptapToHtml:
         """
         classes = set(node.getAttribute("class").split())
         for name, value in changes:
-            if name == "bold":
-                modify_class(classes, "bold", value)
-            elif name == "italic":
-                modify_class(classes, "italic", value)
-            # Add new formatting here!
+            try:
+                method = getattr(self, f"_apply_mark_{name}")
+            except AttributeError:
+                logger.warning("Unrecognized mark: %r", name)
+                classes.add("unrecgonized-mark")
+            else:
+                method(node, value, classes)
         node.setAttribute("class", " ".join(sorted(classes)))
 
     def _convert_element(self, yxml: pycrdt.XmlElement) -> Element:
@@ -285,14 +287,93 @@ class TiptapToHtml:
     # The function should modify the provided element, applying the `attr_changes` (which may originate from either
     # the yjs element itself or from a change event)
 
-    def _apply_tag_paragraph(self, el: Element, attr_changes: Iterable[tuple[str, Any | None]], classes: set[str]):
+    def _apply_tag_paragraph(self, el: Element, attr_changes: Iterable[tuple[str, Any | None]], classes: set[str]) -> None:
         el.tagName = "p"
         for name, value in attr_changes:
             if name == "textAlign":
                 set_retain(classes, lambda cls: not cls.startswith("text-align-"))
                 if value is not None:
-                    print("DEBUG", repr(value), flush=True)
                     classes.add("text-align-" + value)
+
+    def _apply_tag_header(self, el: Element, attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        for name, value in attr_changes:
+            if name == "level" and isinstance(value, int) and value >= 1 and value <= 6:
+                el.tagName = "h" + value
+
+    def _apply_tag_blockquote(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "blockquote"
+
+    def _apply_tag_table(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "table"
+
+    def _apply_tag_tableRow(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "tr"
+
+    def _apply_tag_tableCell(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "td"
+
+    def _apply_tag_tableHeader(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "th"
+
+    def _apply_tag_bulletList(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "ul"
+
+    def _apply_tag_orderedList(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "ol"
+
+    def _apply_tag_listItem(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "li"
+
+    def _apply_tag_hardBreak(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "br"
+
+    def _apply_tag_codeBlock(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], classes: set[str]) -> None:
+        el.tagName = "code"
+        classes.add("code-block")
+
+    def _apply_tag_hardBreak(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+        el.tagName = "div"
+        if not el.childNodes:
+            line1 = self.xhtmldoc.createElement("div")
+            line1.setAttribute("class", "page-break-line")
+            el.appendChild(line1)
+            text = self.xhtmldoc.createElement("div")
+            text.setAttribute("class", "page-break-text")
+            text.appendChild(self.xhtmldoc.createTextNode("Page Break"))
+            el.appendChild(text)
+            line2 = self.xhtmldoc.createElement("div")
+            line2.setAttribute("class", "page-break-line")
+            el.appendChild(line2)
+
+    # ######################################################################
+    # Mark handlers
+
+    def _apply_mark_link(self, el: Element, attr: Any | None, classes: set[str]) -> None:
+        if attr is None:
+            el.tagName = "span"
+            el.removeAttribute("href")
+            el.removeAttribute("rel")
+            el.removeAttribute("target")
+        else:
+            el.tagName = "a"
+            el.setAttribute("href", attr) # TODO: is this correct?
+            el.setAttribute("rel", "noopener noreferrer nofollow")
+            el.setAttribute("target", "_blank")
+
+    def _apply_mark_bold(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+        modify_class(classes, "bold", attr)
+
+    def _apply_mark_code(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+        modify_class(classes, "code", attr)
+
+    def _apply_mark_italic(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+        modify_class(classes, "italic", attr)
+
+    def _apply_mark_strike(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+        modify_class(classes, "strike", attr)
+
+    def _apply_mark_underline(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+        modify_class(classes, "underline", attr)
 
 def modify_class(classes: set[str], name: str, value: Any | None):
     """

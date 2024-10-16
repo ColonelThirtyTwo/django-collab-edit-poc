@@ -25,6 +25,7 @@ export function editor(el: HTMLElement, conn: Connection, key: string) {
 }
 
 export const EXTENSIONS: Extensions = [
+    // IF ADDING/CHANGING: edit tiptap_to_html.py to reflect changes. Also keep in mind old data!
     StarterKit.configure({
         history: false,
     }),
