@@ -1,5 +1,5 @@
 
-from typing import Any, Optional
+from typing import Any, Optional, Self
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -24,6 +24,61 @@ class History(models.Model):
         indexes = [
             models.Index(fields=["target_type", "target_id", "id"]),
         ]
+
+    @classmethod
+    def for_object(cls, obj: "YDocModelWithHistory", recent_first: bool = False):
+        """
+        Gets a `QuerySet` of history entries for an object.
+
+        The history is ordered from first to last, unless `recent_first` is set which will
+        reverse the order.
+
+        It's recommended to bound time based on the `id` field since its monotonically increasing and
+        has no conflicts.
+        """
+        return cls.objects.filter(
+            target_type=ContentType.objects.get_for_model(obj),
+            target_id=obj.pk,
+        ).order_by("-id" if recent_first else "id")
+
+    @classmethod
+    def replay(cls, obj: "YDocModelWithHistory", until_id: int, until_id_inclusive: bool = True) -> pycrdt.Doc:
+        """
+        Gets a `pycrdt.Doc` with the state at the time of the last update at or until `until_id`.
+        """
+        doc = pycrdt.Doc()
+        with doc.transaction():
+            qs = cls.for_object(obj)
+            if until_id_inclusive:
+                qs = qs.filter(id__lte=until_id)
+            else:
+                qs = qs.filter(id__lt=until_id)
+            for history_entry in qs:
+                doc.apply_update(history_entry.update)
+        return doc
+
+    @classmethod
+    def replay_until(cls, obj: "YDocModelWithHistory", history_id: int) -> tuple[pycrdt.Doc, Self] | None:
+        """
+        Gets the history entry with the specified ID and also the doc as it appeared up to that point, excluding the specified update.
+
+        That is, the returned doc will be the state of the doc before the `history_id` update.
+
+        You can add observers to the returend document then apply the returned `History.update`, and the observers will be called
+        with the changes introduced in this history instance.
+
+        If there is no `History` with the passed in `history_id`, returns None.
+        """
+        doc = pycrdt.Doc()
+        last_entry = None
+        with doc.transaction():
+            for history_entry in cls.for_object(obj).filter(id__lte=history_id):
+                if last_entry is not None:
+                    doc.apply_update(last_entry.update)
+                last_entry = history_entry
+        if last_entry is None or last_entry.id != history_id:
+            return None
+        return (doc, last_entry)
 
 
 
@@ -53,10 +108,6 @@ class YDocField(models.BinaryField):
 
 
 
-YDocAdminModel = ComputedFieldsAdminModel
-
-
-
 class YDocModel(ComputedFieldsModel):
     """
     Base class for models that contains a YDoc.
@@ -81,7 +132,6 @@ class YDocModelWithHistory(YDocModel):
     class Meta:
         abstract = True
 
-    history = GenericRelation(History)
     _state_vector_at_load: bytes | None
 
     def __init__(self, *args, **kwargs):
@@ -94,8 +144,11 @@ class YDocModelWithHistory(YDocModel):
 
         If `user` is provided (either its ID or the model itself), `History.author` will be set to the provided user.
         """
-        update = self.yjs_doc.get_update(self._state_vector_at_load)
+        if self._state_vector_at_load == self.yjs_doc.get_state():
+            # No actual changes with the doc, don't save a new history entry
+            return super().save(*args, **kwargs)
 
+        update = self.yjs_doc.get_update(self._state_vector_at_load)
         with transaction.atomic():
             super().save(*args, **kwargs)
             history = History(target=self, update=update)
@@ -127,6 +180,7 @@ def _resolve_path(doc: pycrdt.Doc, doc_value_path: str | list[str | int], typ: t
         value = value[index]
     return value
 
+# Underlying field types for YDocCopyField
 _DOC_TYPE_TO_FIELD = {
     pycrdt.XmlFragment: models.TextField,
     pycrdt.Text: models.TextField,

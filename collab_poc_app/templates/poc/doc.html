@@ -1,15 +1,15 @@
+{% extends "poc/base.html" %}
+
 {% load static %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8"/>
-    <title>Collab Edit PoC</title>
-
+{% block head %}
     <script src="{% static 'frontend/index.js' %}"></script>
-    <link rel="stylesheet" href="{% static 'frontend/index.css' %}" />
-</head>
-<body>
+{% endblock %}
+
+{% block body %}
+    <h1>Edit Test Document</h1>
+    <p><a href="{% url 'history_list' pk=doc.pk %}">View History</a></p>
+
     <h2>Name</h2>
     <input type="text" id="editor-name" disabled />
 
@@ -37,5 +37,4 @@
             });
         })();
     </script>
-</body>
-</html>
+{% endblock %}

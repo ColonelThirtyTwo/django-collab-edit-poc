@@ -1,0 +1,74 @@
+{% extends "poc/base.html" %}
+
+{% load static %}
+
+{% block body %}
+    <h1>{{doc}} at {{history_entry.time}} by {{history_entry.author|default:"System"}}</h1>
+    <p><a href="{% url 'history_list' pk=doc.pk %}">Back to History</a> | <a href="{% url 'detail' pk=doc.pk %}">Back to Document</a></p>
+
+    <h2>Non-Collaborative Fields Changed</h2>
+    <ul>{% for field in non_collab_fields_changed %}<li>{{field}}</li>{% endfor %}</ul>
+
+    {% for name, before, after, delta_render, events in collab_fields %}
+        <h2>{{name}}</h2>
+        <h3>Changes</h3>
+        <div class="rendered-rich-text">
+            {{delta_render}}
+        </div>
+        <h3>Before</h3>
+        <div class="rendered-rich-text">
+            {{before}}
+        </div>
+        <h3>After</h3>
+        <div class="rendered-rich-text">
+            {{after}}
+        </div>
+        <h3>Events</h3>
+        <ol>
+            {% for is_text, path, deltas, keys in events %}
+                <li>
+                    <em>{% if is_text %}Text{% else %}Element{% endif %} at {{path}}</em>
+                    {% if keys %}
+                        <ul>
+                            {% for key, change in keys.items %}
+                                <li>{{key}}: {{change.oldValue|default:"None"}} to {{change.newValue|default:"None"}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if deltas %}
+                        <ol>
+                            {% for delta in deltas %}
+                                <li>
+                                    {% if "retain" in delta %}
+                                        <em>Retain</em> {{delta.retain}} characters
+                                        {% if "attributes" in delta %}
+                                            <ol>
+                                                {% for k,v in delta.attributes.items %}
+                                                    <li>{{k}} = {{v}}</li>
+                                                {% endfor %}
+                                            </ol>
+                                        {% endif %}
+                                    {% elif "insert" in delta %}
+                                        <em>Insert</em>: <code>{{delta.insert}}</code>
+                                        {% if delta.attributes %}
+                                            <ul>
+                                                {% for k,v in delta.attributes.items %}
+                                                    <li>{{k}} = {{v}}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    {% elif "delete" in delta %}
+                                        <em>Delete</em>: {{delta.delete}}
+                                    {% else %}
+                                        {{delta}}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    {% endfor %}
+
+{% endblock %}

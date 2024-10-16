@@ -4,7 +4,7 @@
         "strict": true,
         "jsx": "react-jsx",
         "module": "Node16",
-        "target": "es5",
+        "target": "es6",
         "allowJs": true,
         "moduleResolution": "Node16",
         "noEmit": true,

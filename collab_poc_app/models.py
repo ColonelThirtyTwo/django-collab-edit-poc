@@ -9,6 +9,11 @@ class TestDoc(YDocModelWithHistory):
     # not be modified directly.
     name = YDocCopyField(["non_collab_fields", "name"], str, default="")
 
+    RICH_TEXT_FIELDS = [
+        ("description", "Description"),
+        ("contents", "Contents"),
+    ]
+
     @property
     def description(self) -> pycrdt.XmlFragment:
         return self.yjs_doc.get("description", type=pycrdt.XmlFragment)

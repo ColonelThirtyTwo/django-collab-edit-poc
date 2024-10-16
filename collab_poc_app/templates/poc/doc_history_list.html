@@ -1,0 +1,33 @@
+{% extends "poc/base.html" %}
+
+{% load static %}
+
+{% block body %}
+    <h2>History for {{doc}}</h2>
+    <p><a href="{{doc.get_absolute_url}}">Return to Document</a></p>
+    <ol>
+        {% for entry, diffs in entries %}
+            <li>
+                <h3><a href="{% url "history_view" doc_pk=doc.pk history_pk=entry.id %}">{{entry.time}} by {{entry.author}}</a></h3>
+                {% for _, pretty_name, diff in diffs %}
+                    <h4>{{pretty_name}}</h4>
+                    <div class="rendered-rich-text">
+                        {{diff}}
+                    </div>
+                {% endfor %}
+            </li>
+        {% endfor %}
+    </ol>
+
+    <p>
+        {% if page.has_previous %}
+            <a href="{% url 'history_list' pk=doc.pk %}?page={{page.previous_page_number}}">Previous Page</a>
+        {% endif %}
+        {% if page.has_previous and page.has_next %}
+            |
+        {% endif %}
+        {% if page.has_next %}
+            <a href="{% url 'history_list' pk=doc.pk %}?page={{page.next_page_number}}">Next Page</a>
+        {% endif %}
+
+{% endblock %}

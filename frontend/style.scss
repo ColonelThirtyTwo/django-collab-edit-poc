@@ -1,0 +1,31 @@
+
+.rendered-rich-text {
+
+    // Block attributes
+    .text-align-right {
+        text-align: right;
+    }
+
+    .unrecognized-tag {
+        background-color: rgba(255,255,100,0.4);
+    }
+
+    // Marks
+    .bold {
+        font-weight: bold;
+    }
+    .italic {
+        font-style: italic;
+    }
+
+    // Changes
+    .changeset-added {
+        background-color: rgba(100,255,100,0.4);
+    }
+    .changeset-edited {
+        background-color: rgba(100,100,255,0.4);
+    }
+    .changeset-deleted {
+        background-color: rgba(255,100,100,0.4);
+    }
+}

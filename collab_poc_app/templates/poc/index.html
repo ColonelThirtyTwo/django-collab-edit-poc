@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8"/>
-    <title>Collab Edit PoC</title>
-</head>
-<body>
+{% extends "poc/base.html" %}
+
+{% load static %}
+
+{% block body %}
     <ol>
         {% for doc in docs %}
         <li><a href="{{doc.get_absolute_url}}">{{doc.pk}}: {{doc.name}}</a></li>
@@ -14,5 +12,4 @@
         {% csrf_token %}
         <input type="submit" value="New" />
     </form>
-</body>
-</html>
+{% endblock %}
