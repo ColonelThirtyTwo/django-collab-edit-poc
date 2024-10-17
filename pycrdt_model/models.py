@@ -1,10 +1,13 @@
-
 from typing import Any, Optional, Self
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
-from computedfields.models import ComputedField, ComputedFieldsModel, ComputedFieldsAdminModel
+from computedfields.models import (
+    ComputedField,
+    ComputedFieldsModel,
+    ComputedFieldsAdminModel,
+)
 import pycrdt
 
 
@@ -12,6 +15,7 @@ class History(models.Model):
     """
     Change of a `YDocModelWithHistory`.
     """
+
     id = models.BigAutoField(primary_key=True)
     target_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     target_id = models.PositiveIntegerField()
@@ -42,7 +46,9 @@ class History(models.Model):
         ).order_by("-id" if recent_first else "id")
 
     @classmethod
-    def replay(cls, obj: "YDocModelWithHistory", until_id: int, until_id_inclusive: bool = True) -> pycrdt.Doc:
+    def replay(
+        cls, obj: "YDocModelWithHistory", until_id: int, until_id_inclusive: bool = True
+    ) -> pycrdt.Doc:
         """
         Gets a `pycrdt.Doc` with the state at the time of the last update at or until `until_id`.
         """
@@ -58,7 +64,9 @@ class History(models.Model):
         return doc
 
     @classmethod
-    def replay_until(cls, obj: "YDocModelWithHistory", history_id: int) -> tuple[pycrdt.Doc, Self] | None:
+    def replay_until(
+        cls, obj: "YDocModelWithHistory", history_id: int
+    ) -> tuple[pycrdt.Doc, Self] | None:
         """
         Gets the history entry with the specified ID and also the doc as it appeared up to that point, excluding the specified update.
 
@@ -81,13 +89,13 @@ class History(models.Model):
         return (doc, last_entry)
 
 
-
 class YDocField(models.BinaryField):
     """
     Django field for a yjs document.
 
     The document's client id will be set to zero.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -107,18 +115,17 @@ class YDocField(models.BinaryField):
         return value.get_update()
 
 
-
 class YDocModel(ComputedFieldsModel):
     """
     Base class for models that contains a YDoc.
 
     Adds `yjs_doc` field and sets up for `YDocCopyField` to work.
     """
+
     class Meta:
         abstract = True
 
     yjs_doc: pycrdt.Doc = YDocField()
-
 
 
 class YDocModelWithHistory(YDocModel):
@@ -129,6 +136,7 @@ class YDocModelWithHistory(YDocModel):
     loaded at to the state vector at time of saving. The history's `user` field can be provided as
     a keyword argument.
     """
+
     class Meta:
         abstract = True
 
@@ -159,8 +167,6 @@ class YDocModelWithHistory(YDocModel):
             history.save()
 
 
-
-
 def _resolve_path(doc: pycrdt.Doc, doc_value_path: str | list[str | int], typ: type):
     """
     Gets a possibly nested value from a YDoc via a path.
@@ -175,10 +181,14 @@ def _resolve_path(doc: pycrdt.Doc, doc_value_path: str | list[str | int], typ: t
         raise ValueError("Empty path")
     if len(doc_value_path) == 1:
         return doc.get(doc_value_path[0], typ)
-    value = doc.get(doc_value_path[0], type=pycrdt.Map if isinstance(doc_value_path[1], str) else pycrdt.Array)
+    value = doc.get(
+        doc_value_path[0],
+        type=pycrdt.Map if isinstance(doc_value_path[1], str) else pycrdt.Array,
+    )
     for index in doc_value_path[1:]:
         value = value[index]
     return value
+
 
 # Underlying field types for YDocCopyField
 _DOC_TYPE_TO_FIELD = {
@@ -190,6 +200,7 @@ _DOC_TYPE_TO_FIELD = {
     bool: models.BooleanField,
     bytes: models.BinaryField,
 }
+
 
 def YDocCopyField(
     doc_value_path: str | list[str | int],
@@ -205,6 +216,7 @@ def YDocCopyField(
     """
     if doc_value_typ not in _DOC_TYPE_TO_FIELD:
         raise ValueError("Type not implement for YDocCopyField: " + repr(doc_value_typ))
+
     def do_compute(this):
         try:
             value = _resolve_path(this.yjs_doc, doc_value_path, doc_value_typ)
@@ -215,9 +227,9 @@ def YDocCopyField(
         if isinstance(value, pycrdt.XmlFragment) or isinstance(value, pycrdt.Text):
             return str(value)
         return value
+
     return ComputedField(
         _DOC_TYPE_TO_FIELD[doc_value_typ](null=null),
         depends=[("self", ["yjs_doc"])],
         compute=do_compute,
     )
-

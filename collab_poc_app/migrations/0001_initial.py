@@ -9,19 +9,26 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='TestDoc',
+            name="TestDoc",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('yjs_doc', pycrdt_model.models.YDocField()),
-                ('name', models.TextField(editable=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("yjs_doc", pycrdt_model.models.YDocField()),
+                ("name", models.TextField(editable=False)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
             bases=(computedfields.resolver._ComputedFieldsModelBase, models.Model),
         ),

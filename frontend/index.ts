@@ -1,4 +1,3 @@
-
 import "./style.scss";
 import Connection from "./connection.ts";
 import { editor } from "./editors/tiptap/index.tsx";

@@ -1,63 +1,63 @@
-
 .rendered-rich-text {
-    .unrecognized-tag, .unrecognized-mark {
-        background-color: rgba(255,255,100,0.4);
-    }
+  .unrecognized-tag,
+  .unrecognized-mark {
+    background-color: rgba(255, 255, 100, 0.4);
+  }
 
-    // Block attributes
-    .text-align-right {
-        text-align: right;
-    }
+  // Block attributes
+  .text-align-right {
+    text-align: right;
+  }
 
-    .code-block {
-        display: block;
-        font-family: monospace;
-        white-space: pre;
-        word-break: keep-all;
-    }
+  .code-block {
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    word-break: keep-all;
+  }
 
-    div.page-break {
-        display: flex;
-        flex-direction: row;
-        gap: 0.5rem;
-        align-items: center;
+  div.page-break {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
 
-        margin: 1rem 0;
+    margin: 1rem 0;
 
-        .page-break-text {
-            color: #aaa;
-        }
-        .page-break-line {
-            border-top: 1px solid #aaa;
-            flex-grow: 1;
-        }
+    .page-break-text {
+      color: #aaa;
     }
+    .page-break-line {
+      border-top: 1px solid #aaa;
+      flex-grow: 1;
+    }
+  }
 
-    // Marks
-    .bold {
-        font-weight: bold;
-    }
-    .code {
-        font-family: monospace;
-    }
-    .italic {
-        font-style: italic;
-    }
-    .strike {
-        text-decoration: line-through;
-    }
-    .underline {
-        text-decoration: underline;
-    }
+  // Marks
+  .bold {
+    font-weight: bold;
+  }
+  .code {
+    font-family: monospace;
+  }
+  .italic {
+    font-style: italic;
+  }
+  .strike {
+    text-decoration: line-through;
+  }
+  .underline {
+    text-decoration: underline;
+  }
 
-    // Changes
-    .changeset-added {
-        background-color: rgba(100,255,100,0.4);
-    }
-    .changeset-edited {
-        background-color: rgba(100,100,255,0.4);
-    }
-    .changeset-deleted {
-        background-color: rgba(255,100,100,0.4);
-    }
+  // Changes
+  .changeset-added {
+    background-color: rgba(100, 255, 100, 0.4);
+  }
+  .changeset-edited {
+    background-color: rgba(100, 100, 255, 0.4);
+  }
+  .changeset-deleted {
+    background-color: rgba(255, 100, 100, 0.4);
+  }
 }

@@ -1,4 +1,3 @@
-
 import logging
 from typing import Any, Callable, Iterable, Iterator, TypeVar
 import pycrdt
@@ -7,7 +6,8 @@ from django.utils.safestring import SafeString
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class TiptapToHtml:
     """
@@ -20,13 +20,14 @@ class TiptapToHtml:
     This converter assumes the XML comes from this app's tiptap/prosemirror schema config, and also only works
     assuming that block nodes can only contain either block nodes or text nodes as direct children, and does not
     mix them (which is true for every schema that I am aware of).
-    
+
     `XmlElements` are converted to their HTML equivalent. `XmlText` segments are converted to a sequence of
     `span`, `a`, or other inline elements - one for each "diff" segment of the text.
 
     The generated HTML is stored as an XML document so that it can be navigated for applying event diffs.
     `__str__` converts the document to XHTML for inclusion in a document.
     """
+
     xhtmldoc: Document
     xhtmlfrag: DocumentFragment
 
@@ -37,11 +38,11 @@ class TiptapToHtml:
             self.xhtmlfrag.appendChild(node)
 
     def __str__(self) -> SafeString:
-        return SafeString(
-            "".join(node.toxml() for node in self.xhtmlfrag.childNodes)
-        )
+        return SafeString("".join(node.toxml() for node in self.xhtmlfrag.childNodes))
 
-    def _convert(self, yxml: pycrdt.XmlElement | pycrdt.XmlText | pycrdt.XmlFragment) -> Iterator[Node]:
+    def _convert(
+        self, yxml: pycrdt.XmlElement | pycrdt.XmlText | pycrdt.XmlFragment
+    ) -> Iterator[Node]:
         if isinstance(yxml, pycrdt.XmlText):
             for text, attrs in yxml.diff():
                 yield self._convert_text_segment(text, attrs)
@@ -51,7 +52,9 @@ class TiptapToHtml:
             return
         yield self._convert_element(yxml)
 
-    def _convert_children(self, yxml: pycrdt.XmlElement | pycrdt.XmlFragment) -> Iterator[Node]:
+    def _convert_children(
+        self, yxml: pycrdt.XmlElement | pycrdt.XmlFragment
+    ) -> Iterator[Node]:
         for ch in yxml.children:
             yield from self._convert(ch)
 
@@ -63,7 +66,9 @@ class TiptapToHtml:
             self._apply_text_formatting(el, attrs.items())
         return el
 
-    def _apply_text_formatting(self, node: Element, changes: Iterable[tuple[str, Any | None]]) -> None:
+    def _apply_text_formatting(
+        self, node: Element, changes: Iterable[tuple[str, Any | None]]
+    ) -> None:
         """
         Applies a change in text formatting.
 
@@ -92,7 +97,9 @@ class TiptapToHtml:
             node.appendChild(child)
         return node
 
-    def _apply_element_formatting(self, yxml_tag: str, node: Element, changes: Iterable[tuple[str, Any | None]]) -> None:
+    def _apply_element_formatting(
+        self, yxml_tag: str, node: Element, changes: Iterable[tuple[str, Any | None]]
+    ) -> None:
         """
         Applies a change in element formatting.
 
@@ -100,7 +107,9 @@ class TiptapToHtml:
         It may be a complete set from the element's initial creation, or a difference from an edit event.
         """
         try:
-            method: Callable[[Element, Iterable[tuple[str, Any | None]], set[str]], None] = getattr(self, f"_apply_tag_{yxml_tag}")
+            method: Callable[
+                [Element, Iterable[tuple[str, Any | None]], set[str]], None
+            ] = getattr(self, f"_apply_tag_{yxml_tag}")
         except AttributeError:
             logger.warning("Unimplemented yxml tag: %s", yxml_tag)
             node.tagName = "div"
@@ -113,7 +122,7 @@ class TiptapToHtml:
     # ######################################################################
     # Text diff
 
-    def apply_text_event(self, path: list[int], delta: list[dict[str,Any]]):
+    def apply_text_event(self, path: list[int], delta: list[dict[str, Any]]):
         """
         Applies diff formatting for an alteration on a text node.
 
@@ -131,31 +140,51 @@ class TiptapToHtml:
         # Delta sections are specified via adding character offsets. This is more complicated since we have XHTML nodes.
         # So store the current position as a tuple of the current span we are in and the string offset.
         #
-        # _advance_characters will return a new span,index 
+        # _advance_characters will return a new span,index
         current_span = parentNode.childNodes[0]
         char_index = 0
 
         for op in delta:
             if "retain" in op:
-                current_span, char_index, segments = self._advance_characters(current_span, char_index, op["retain"])
+                current_span, char_index, segments = self._advance_characters(
+                    current_span, char_index, op["retain"]
+                )
 
                 attrs: dict[str, Any] | None = op.get("attributes")
                 if not attrs:
                     continue
                 for node, slice in segments:
                     if slice.stop is not None:
-                        node, _, current_span, char_index = self._split_span_and_track_pos(node, slice.stop, current_span, char_index)
+                        node, _, current_span, char_index = (
+                            self._split_span_and_track_pos(
+                                node, slice.stop, current_span, char_index
+                            )
+                        )
                     if slice.start != 0:
-                        _, node, current_span, char_index = self._split_span_and_track_pos(node, slice.start, current_span, char_index)
+                        _, node, current_span, char_index = (
+                            self._split_span_and_track_pos(
+                                node, slice.start, current_span, char_index
+                            )
+                        )
                 self._apply_text_formatting(node, attrs.items())
                 add_class(node, "changeset-edited")
             elif "delete" in op:
-                current_span, char_index, segments = self._advance_characters(current_span, char_index, op["delete"])
+                current_span, char_index, segments = self._advance_characters(
+                    current_span, char_index, op["delete"]
+                )
                 for node, slice in segments:
                     if slice.stop is not None:
-                        node, _, current_span, char_index = self._split_span_and_track_pos(node, slice.stop, current_span, char_index)
+                        node, _, current_span, char_index = (
+                            self._split_span_and_track_pos(
+                                node, slice.stop, current_span, char_index
+                            )
+                        )
                     if slice.start != 0:
-                        _, node, current_span, char_index = self._split_span_and_track_pos(node, slice.start, current_span, char_index)
+                        _, node, current_span, char_index = (
+                            self._split_span_and_track_pos(
+                                node, slice.start, current_span, char_index
+                            )
+                        )
                     add_class(node, "changeset-deleted")
             elif "insert" in op:
                 if char_index != 0:
@@ -168,7 +197,9 @@ class TiptapToHtml:
                 raise ValueError(f"Unrecognized yjs delta: {op!r}")
 
     @staticmethod
-    def _advance_characters(current_span: Element, char_index: int, num_chars: int) -> tuple[
+    def _advance_characters(
+        current_span: Element, char_index: int, num_chars: int
+    ) -> tuple[
         Element,
         int,
         list[tuple[Element, slice]],
@@ -190,18 +221,19 @@ class TiptapToHtml:
             assert isinstance(current_span.childNodes[0], Text)
             text: str = current_span.childNodes[0].data
             if char_index + num_chars >= len(text):
-                passed_over.append((
-                    current_span,
-                    slice(char_index, None),
-                ))
+                passed_over.append(
+                    (
+                        current_span,
+                        slice(char_index, None),
+                    )
+                )
                 num_chars = num_chars + char_index - len(text)
                 current_span = current_span.nextSibling
                 char_index = 0
             else:
-                passed_over.append((
-                    current_span,
-                    slice(char_index, char_index+num_chars)
-                ))
+                passed_over.append(
+                    (current_span, slice(char_index, char_index + num_chars))
+                )
                 char_index += num_chars
                 num_chars = 0
         return (current_span, char_index, passed_over)
@@ -212,9 +244,9 @@ class TiptapToHtml:
         """
         left = self.xhtmldoc.createElement(span.tagName)
         right = self.xhtmldoc.createElement(span.tagName)
-        for k,v in span.attributes.items():
-            left.setAttribute(k,v)
-            right.setAttribute(k,v)
+        for k, v in span.attributes.items():
+            left.setAttribute(k, v)
+            right.setAttribute(k, v)
         text = span.childNodes[0].data
         left.appendChild(self.xhtmldoc.createTextNode(text[:offset]))
         right.appendChild(self.xhtmldoc.createTextNode(text[offset:]))
@@ -222,7 +254,9 @@ class TiptapToHtml:
         span.parentNode.replaceChild(right, span)
         return (left, right)
 
-    def _split_span_and_track_pos(self, span: Element, offset: int, current_span: Element, char_index: int) -> tuple[Element, Element, Element, int]:
+    def _split_span_and_track_pos(
+        self, span: Element, offset: int, current_span: Element, char_index: int
+    ) -> tuple[Element, Element, Element, int]:
         """
         Split spans and also returns adjusted current_span + char_index if the span being split is the current_span.
         """
@@ -236,7 +270,12 @@ class TiptapToHtml:
     # ######################################################################
     # Element deltas
 
-    def apply_element_event(self, path: list[int], delta: list[dict[str, Any]], key_delta: dict[str, Any | None]):
+    def apply_element_event(
+        self,
+        path: list[int],
+        delta: list[dict[str, Any]],
+        key_delta: dict[str, Any | None],
+    ):
         """
         Applies diff formatting for an alteration on an element.
 
@@ -251,7 +290,7 @@ class TiptapToHtml:
             self._apply_element_formatting(
                 node.getAttribute("data-yjs-tag"),
                 node,
-                ((k, v.get("newValue")) for k,v in key_delta.items()),
+                ((k, v.get("newValue")) for k, v in key_delta.items()),
             )
             add_class(node, "changeset-edited")
 
@@ -262,7 +301,10 @@ class TiptapToHtml:
             elif "insert" in op:
                 for el in op["insert"]:
                     if isinstance(el, pycrdt.XmlText):
-                        new_nodes = (self._convert_text_segment(text, attrs) for text, attrs in el.diff())
+                        new_nodes = (
+                            self._convert_text_segment(text, attrs)
+                            for text, attrs in el.diff()
+                        )
                     else:
                         new_nodes = [self._convert_element(el)]
                     for insert_node in new_nodes:
@@ -287,7 +329,12 @@ class TiptapToHtml:
     # The function should modify the provided element, applying the `attr_changes` (which may originate from either
     # the yjs element itself or from a change event)
 
-    def _apply_tag_paragraph(self, el: Element, attr_changes: Iterable[tuple[str, Any | None]], classes: set[str]) -> None:
+    def _apply_tag_paragraph(
+        self,
+        el: Element,
+        attr_changes: Iterable[tuple[str, Any | None]],
+        classes: set[str],
+    ) -> None:
         el.tagName = "p"
         for name, value in attr_changes:
             if name == "textAlign":
@@ -295,43 +342,103 @@ class TiptapToHtml:
                 if value is not None:
                     classes.add("text-align-" + value)
 
-    def _apply_tag_header(self, el: Element, attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_header(
+        self,
+        el: Element,
+        attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         for name, value in attr_changes:
             if name == "level" and isinstance(value, int) and value >= 1 and value <= 6:
                 el.tagName = "h" + value
 
-    def _apply_tag_blockquote(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_blockquote(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "blockquote"
 
-    def _apply_tag_table(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_table(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "table"
 
-    def _apply_tag_tableRow(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_tableRow(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "tr"
 
-    def _apply_tag_tableCell(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_tableCell(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "td"
 
-    def _apply_tag_tableHeader(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_tableHeader(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "th"
 
-    def _apply_tag_bulletList(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_bulletList(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "ul"
 
-    def _apply_tag_orderedList(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_orderedList(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "ol"
 
-    def _apply_tag_listItem(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_listItem(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "li"
 
-    def _apply_tag_hardBreak(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_hardBreak(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "br"
 
-    def _apply_tag_codeBlock(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], classes: set[str]) -> None:
+    def _apply_tag_codeBlock(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        classes: set[str],
+    ) -> None:
         el.tagName = "code"
         classes.add("code-block")
 
-    def _apply_tag_hardBreak(self, el: Element, _attr_changes: Iterable[tuple[str, Any | None]], _classes: set[str]) -> None:
+    def _apply_tag_hardBreak(
+        self,
+        el: Element,
+        _attr_changes: Iterable[tuple[str, Any | None]],
+        _classes: set[str],
+    ) -> None:
         el.tagName = "div"
         if not el.childNodes:
             line1 = self.xhtmldoc.createElement("div")
@@ -348,7 +455,9 @@ class TiptapToHtml:
     # ######################################################################
     # Mark handlers
 
-    def _apply_mark_link(self, el: Element, attr: Any | None, classes: set[str]) -> None:
+    def _apply_mark_link(
+        self, el: Element, attr: Any | None, classes: set[str]
+    ) -> None:
         if attr is None:
             el.tagName = "span"
             el.removeAttribute("href")
@@ -356,24 +465,35 @@ class TiptapToHtml:
             el.removeAttribute("target")
         else:
             el.tagName = "a"
-            el.setAttribute("href", attr) # TODO: is this correct?
+            el.setAttribute("href", attr)  # TODO: is this correct?
             el.setAttribute("rel", "noopener noreferrer nofollow")
             el.setAttribute("target", "_blank")
 
-    def _apply_mark_bold(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+    def _apply_mark_bold(
+        self, _el: Element, attr: Any | None, classes: set[str]
+    ) -> None:
         modify_class(classes, "bold", attr)
 
-    def _apply_mark_code(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+    def _apply_mark_code(
+        self, _el: Element, attr: Any | None, classes: set[str]
+    ) -> None:
         modify_class(classes, "code", attr)
 
-    def _apply_mark_italic(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+    def _apply_mark_italic(
+        self, _el: Element, attr: Any | None, classes: set[str]
+    ) -> None:
         modify_class(classes, "italic", attr)
 
-    def _apply_mark_strike(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+    def _apply_mark_strike(
+        self, _el: Element, attr: Any | None, classes: set[str]
+    ) -> None:
         modify_class(classes, "strike", attr)
 
-    def _apply_mark_underline(self, _el: Element, attr: Any | None, classes: set[str]) -> None:
+    def _apply_mark_underline(
+        self, _el: Element, attr: Any | None, classes: set[str]
+    ) -> None:
         modify_class(classes, "underline", attr)
+
 
 def modify_class(classes: set[str], name: str, value: Any | None):
     """
@@ -384,6 +504,7 @@ def modify_class(classes: set[str], name: str, value: Any | None):
     else:
         classes.add(name)
 
+
 def set_retain(set: set[T], func: Callable[[T], bool]):
     """
     Remove elements from a set where `func(element)` returns false
@@ -391,6 +512,7 @@ def set_retain(set: set[T], func: Callable[[T], bool]):
     for v in set:
         if not func(v):
             set.remove(v)
+
 
 def add_class(el: Element, cls: str):
     """

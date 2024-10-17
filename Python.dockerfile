@@ -20,4 +20,4 @@ RUN cd /install/ && \
 
 VOLUME ["/app"]
 WORKDIR /app
-ENTRYPOINT [ "python", "manage.py" ]
+ENTRYPOINT [ "python" ]

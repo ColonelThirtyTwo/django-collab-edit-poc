@@ -10,7 +10,7 @@ services:
       - redis
     ports:
       - 8001:8001
-    command: runserver 0.0.0.0:8001
+    command: manage.py runserver 0.0.0.0:8001
   django-workers:
     build:
       dockerfile: ./Python.dockerfile
@@ -19,7 +19,7 @@ services:
       - .:/app
     depends_on:
       - redis
-    command: runworker yjs-save
+    command: manage.py runworker yjs-save
   redis:
     image: redis:6-alpine
   build-frontend:

@@ -1,4 +1,3 @@
-
 import asyncio
 from typing import Any, Callable, Coroutine
 import uuid
@@ -18,6 +17,7 @@ from pycrdt_model.models import YDocModel, YDocModelWithHistory
 logger = logging.getLogger(__name__)
 
 DEFAULT_WORKER_CHANNEL_NAME: str = "yjs-save"
+
 
 class YjsUpdateConsumer(YjsConsumer):
     worker_channel_name: str
@@ -45,12 +45,13 @@ class YjsUpdateConsumer(YjsConsumer):
 
     def make_room_name(self) -> str:
         return "yjs-{}-{}".format(
-            self.model._meta.label,
-            self.scope["url_route"]["kwargs"]["pk"]
+            self.model._meta.label, self.scope["url_route"]["kwargs"]["pk"]
         )
 
     async def make_ydoc(self) -> pycrdt.Doc:
-        obj: YDocModel = await aget_object_or_404(self.model, pk=self.scope["url_route"]["kwargs"]["pk"])
+        obj: YDocModel = await aget_object_or_404(
+            self.model, pk=self.scope["url_route"]["kwargs"]["pk"]
+        )
         doc = obj.yjs_doc
         doc.observe(self._doc_transaction_callback)
         return doc
@@ -67,23 +68,27 @@ class YjsUpdateConsumer(YjsConsumer):
 
     def _doc_transaction_callback(self, ev: pycrdt.TransactionEvent):
         logger.debug("%s: Transaction", self.connection_id)
-        self.updates_to_send.append({
-            "type": "doc_updated",
-            "connection_id": self.connection_id,
-            "model_app": self.model._meta.app_label,
-            "model_name": self.model._meta.model_name,
-            "model_pk": self.scope["url_route"]["kwargs"]["pk"],
-            "user_pk": self.scope["user"].pk,
-            "update_bytes": ev.update,
-        })
+        self.updates_to_send.append(
+            {
+                "type": "doc_updated",
+                "connection_id": self.connection_id,
+                "model_app": self.model._meta.app_label,
+                "model_name": self.model._meta.model_name,
+                "model_pk": self.scope["url_route"]["kwargs"]["pk"],
+                "user_pk": self.scope["user"].pk,
+                "update_bytes": ev.update,
+            }
+        )
 
     async def disconnect(self, *args, **kwargs) -> None:
-        self.channel_layer.send(self.worker_channel_name, {
-            "type": "doc_flush",
-            "connection_id": self.connection_id,
-        })
+        self.channel_layer.send(
+            self.worker_channel_name,
+            {
+                "type": "doc_flush",
+                "connection_id": self.connection_id,
+            },
+        )
         super().disconnect(*args, **kwargs)
-
 
 
 class DebouncedCallback:
@@ -92,11 +97,11 @@ class DebouncedCallback:
     cb: Callable[[], Coroutine[Any, Any, None]]
 
     def __init__(
-            self,
-            cb: Callable[[], Coroutine[Any, Any, None]],
-            *,
-            task_name: str | None = None
-        ):
+        self,
+        cb: Callable[[], Coroutine[Any, Any, None]],
+        *,
+        task_name: str | None = None
+    ):
         self.cb = cb
         self.task_name = task_name
         self.ended = False
@@ -125,7 +130,7 @@ class PendingState:
     """
 
     # Higher values reduce database load and number of history entries, but also cause edits to take longer to save.
-    save_debounce_time: float = 1.0 # seconds
+    save_debounce_time: float = 1.0  # seconds
 
     connection_id: str
     model: type[YDocModel]
@@ -155,10 +160,13 @@ class PendingState:
         self.save_debounce_cb = DebouncedCallback(self._debounce_cb)
 
     async def _debounce_cb(self):
-        await self.channel_layer.send(self.channel_name, {
-            "type": "doc_flush",
-            "connection_id": self.connection_id,
-        })
+        await self.channel_layer.send(
+            self.channel_name,
+            {
+                "type": "doc_flush",
+                "connection_id": self.connection_id,
+            },
+        )
 
     def update(self, update_bytes: bytes) -> None:
         self.updates.append(update_bytes)
@@ -188,7 +196,6 @@ class PendingState:
             logger.debug("Update from %s: %r", user, instance)
 
 
-
 class YjsSaverWorkerConsumer(AsyncConsumer):
     pending_state: type[PendingState] = PendingState
     pending: dict[str, PendingState]
@@ -201,7 +208,9 @@ class YjsSaverWorkerConsumer(AsyncConsumer):
         connection_id: str = message["connection_id"]
         logger.debug("doc_updated from %s user %s", connection_id, message["user_pk"])
         if connection_id not in self.pending:
-            model = apps.get_app_config(message["model_app"]).get_model(message["model_name"])
+            model = apps.get_app_config(message["model_app"]).get_model(
+                message["model_name"]
+            )
             self.pending[connection_id] = self.pending_state(
                 connection_id,
                 model,
