@@ -88,7 +88,7 @@ class YjsUpdateConsumer(YjsConsumer):
                 "connection_id": self.connection_id,
             },
         )
-        super().disconnect(*args, **kwargs)
+        await super().disconnect(*args, **kwargs)
 
 
 class DebouncedCallback:

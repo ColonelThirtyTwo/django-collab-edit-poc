@@ -1,12 +1,11 @@
 from typing import Any, Optional, Self
 from django.db import models, transaction
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from computedfields.models import (
     ComputedField,
     ComputedFieldsModel,
-    ComputedFieldsAdminModel,
 )
 import pycrdt
 
@@ -102,7 +101,9 @@ class YDocField(models.BinaryField):
     def get_default(self) -> pycrdt.Doc:
         return pycrdt.Doc(client_id=0)
 
-    def from_db_value(self, value, _expression, _connection):
+    def from_db_value(
+        self, value: bytes | None, _expression, _connection
+    ) -> pycrdt.Doc | None:
         if value is None:
             return None
         doc = pycrdt.Doc(client_id=0)
@@ -146,7 +147,7 @@ class YDocModelWithHistory(YDocModel):
         super().__init__(*args, **kwargs)
         self._state_vector_at_load = self.yjs_doc.get_state()
 
-    def save(self, *args, user: User | int = None, **kwargs):
+    def save(self, *args, user: User | int | None = None, **kwargs):
         """
         As Django's model save, but also saves a `History` entry for the update.
 
@@ -176,13 +177,18 @@ def _resolve_path(doc: pycrdt.Doc, doc_value_path: str | list[str | int], typ: t
     integers. This will traverse the document, indexing each element in the list order.
     """
     if isinstance(doc_value_path, str):
-        return doc.get(doc_value_path, typ)
+        return doc.get(doc_value_path, type=typ)
     if not doc_value_path:
         raise ValueError("Empty path")
+
+    first = doc_value_path[0]
+    if not isinstance(first, str):
+        raise ValueError("doc_value_path must start with a string")
+
     if len(doc_value_path) == 1:
-        return doc.get(doc_value_path[0], typ)
-    value = doc.get(
-        doc_value_path[0],
+        return doc.get(first, type=typ)
+    value: pycrdt.Map | pycrdt.Array = doc.get(
+        first,
         type=pycrdt.Map if isinstance(doc_value_path[1], str) else pycrdt.Array,
     )
     for index in doc_value_path[1:]:
