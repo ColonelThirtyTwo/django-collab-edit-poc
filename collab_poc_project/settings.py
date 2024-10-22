@@ -157,5 +157,8 @@ LOGGING = {
         "pycrdt_model": {
             "level": "DEBUG",
         },
+        #"django.db.backends": {
+        #    "level": "DEBUG",
+        #},
     },
 }

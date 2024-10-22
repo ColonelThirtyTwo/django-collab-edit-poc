@@ -13,6 +13,9 @@
     <h2>Name</h2>
     <input type="text" id="editor-name" disabled />
 
+    <h2>Score</h2>
+    <input type="number" id="editor-score" disabled />
+
     <h2>Description</h2>
     <div class="editor editor-area" id="editor-description">Loading...</div>
 
@@ -31,6 +34,7 @@
                 if(isSynced && !activated) {
                     activated = true;
                     pocNonCollabText(document.getElementById("editor-name"), conn, "name");
+                    pocNonCollabInteger(document.getElementById("editor-score"), conn, "score");
                     pocEditor(document.getElementById("editor-description"), conn, "description");
                     pocEditor(document.getElementById("editor-content"), conn, "contents");
                 }

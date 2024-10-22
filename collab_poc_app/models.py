@@ -1,26 +1,23 @@
+from django.db import models
 from django.urls import reverse
 import pycrdt
 
-from pycrdt_model.models import YDocCopyField, YDocModelWithHistory
+from pycrdt_model.models import YField, YDocModelWithHistory
 
 
 class TestDoc(YDocModelWithHistory):
-    # Note: all fields except `yjs` are copies of the data stored in `yjs` and should
-    # not be modified directly.
-    name = YDocCopyField(["non_collab_fields", "name"], str, default="")
+    stored_name = models.TextField("name", null=True, blank=True, editable=False)
+    name = YField(["non_collab_fields", "name"], copy_to_field="stored_name")
+    stored_score = models.IntegerField("score", null=True, blank=True, editable=False)
+    score = YField(["non_collab_fields", "score"], copy_to_field="stored_score")
+
+    description = YField("description", pycrdt.XmlFragment)
+    contents = YField("contents", pycrdt.XmlFragment)
 
     RICH_TEXT_FIELDS = [
         ("description", "Description"),
         ("contents", "Contents"),
     ]
-
-    @property
-    def description(self) -> pycrdt.XmlFragment:
-        return self.yjs_doc.get("description", type=pycrdt.XmlFragment)
-
-    @property
-    def contents(self) -> pycrdt.XmlFragment:
-        return self.yjs_doc.get("contents", type=pycrdt.XmlFragment)
 
     def get_absolute_url(self):
         return reverse("detail", kwargs={"pk": self.pk})
@@ -29,8 +26,9 @@ class TestDoc(YDocModelWithHistory):
         return self.name
 
     def __repr__(self):
-        return "TestDoc(name={!r}, description={!r}, contents={!r})".format(
+        return "TestDoc(name={!r}, score={!r}, description={!r}, contents={!r})".format(
             self.name,
+            self.score,
             str(self.description),
             str(self.contents),
         )
