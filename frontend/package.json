@@ -4,7 +4,7 @@
   "author": "",
   "license": "UNLICENSED",
   "description": "",
-  "source": "./index.ts",
+  "source": "./src/index.ts",
   "type": "module",
   "scripts": {
     "watch": "parcel watch",
