@@ -157,10 +157,18 @@ class YDocModel(models.Model):
 
     yjs_doc: pycrdt.Doc = YDocField()
 
-    def save(self, *args, **kwargs):
-        for field in self._meta.concrete_fields:
+    def copy_y_fields(self):
+        """
+        Copies fields from the ydoc to the Django field, as configured by its `YField`s.
+
+        `save` does this before saving, so you shouldn't need to do this manually.
+        """
+        for field in self._meta.fields:
             if isinstance(field, YField):
                 field._do_copy_to_field(self)
+
+    def save(self, *args, **kwargs):
+        self.copy_y_fields()
         return super().save(*args, **kwargs)
 
 
